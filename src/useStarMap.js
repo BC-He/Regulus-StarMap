@@ -9,6 +9,7 @@ function useStarMap(svgRef) {
     const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
     const [currentRange, setCurrentRange] = useState({ x: [0, 24], y: [-90, 90] });
     const [clickedPoint, setClickedPoint] = useState(null);
+    const [nearestStar, setNearestStar] = useState(null);
     useEffect(() => {
       function handleResize() {
         setDimensions({
@@ -21,13 +22,66 @@ function useStarMap(svgRef) {
       return () => window.removeEventListener('resize', handleResize);
     }, []);
     
+    const findNearestStar = useCallback((ra, dec) => {
+      // Binary search to find the closest RA
+      let left = 0;
+      let right = starData.length - 1;
+      while (left <= right) {
+          const mid = Math.floor((left + right) / 2);
+          const midRA = starData[mid].right_ascension.hours + 
+                        starData[mid].right_ascension.minutes / 60 + 
+                        parseFloat(starData[mid].right_ascension.seconds) / 3600;
+          
+          if (midRA < ra) {
+              left = mid + 1;
+          } else if (midRA > ra) {
+              right = mid - 1;
+          } else {
+              left = mid;
+              break;
+          }
+      }
+
+      // Linear search in a small range around the found index
+      const searchRange = 1000; // Adjust this value based on your data distribution
+      let start = Math.max(0, left - searchRange);
+      let end = Math.min(starData.length - 1, left + searchRange);
+
+      let nearestDistance = Infinity;
+      let nearest = null;
+
+      for (let i = start; i <= end; i++) {
+          const star = starData[i];
+          const starRA = star.right_ascension.hours + 
+                         star.right_ascension.minutes / 60 + 
+                         parseFloat(star.right_ascension.seconds) / 3600;
+          const starDec = star.declination.degrees + 
+                          star.declination.minutes / 60 + 
+                          parseFloat(star.declination.seconds) / 3600;
+
+          const distance = Math.sqrt(
+              Math.pow(ra - starRA, 2) + 
+              Math.pow(dec - starDec, 2)
+          );
+
+          if (distance < nearestDistance) {
+              nearestDistance = distance;
+              nearest = star;
+          }
+      }
+
+      return nearest;
+  }, []);
+
     const handleClick = useCallback((event, xScale, yScale) => {
         const [x, y] = d3.pointer(event);
         const ra = xScale.invert(x);
         const dec = yScale.invert(y);
     
         setClickedPoint({ ra, dec });
-      }, []);
+        const nearest = findNearestStar(ra, dec);
+        setNearestStar(nearest);
+    }, [findNearestStar]);
 
     useEffect(() => {
       const svg = d3.select(svgRef.current);
@@ -128,7 +182,7 @@ function useStarMap(svgRef) {
   
     }, [dimensions, handleClick]);
 
-    return { dimensions, currentRange, clickedPoint };
+    return { dimensions, currentRange, clickedPoint, nearestStar };
   }
   
   export default useStarMap;
