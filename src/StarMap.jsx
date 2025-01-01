@@ -24,5 +24,4 @@ function StarMap() {
     </div>
   );
 }
-
 export default StarMap;
