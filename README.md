@@ -24,7 +24,7 @@ The star information is obtained from the **SAO catalog** provided by NASA:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-username/star-map.git
+   git clone git@github.com:BC-He/StarMap.git
    cd star-map
 2. **Install Dependencies**
    ```bash
