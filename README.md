@@ -29,9 +29,11 @@ The star information is obtained from the **SAO catalog** provided by NASA:
 2. **Install Dependencies**
    ```bash
    npm install
+   ```
    or
    ```bash
    yarn install
+   ```
 3. **Run the server**
    ```bash
    npm run dev
