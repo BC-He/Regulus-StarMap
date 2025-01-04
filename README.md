@@ -3,7 +3,7 @@
 A star map visualization project built using **Node.js** and **React.js**, designed to display stars from the SAO catalog with features like zooming, panning, and searching for stars by clicking.
 
 ## Features
-
+![Star Map web page view](assets/MapView.png)
 - **Star Visualization**: Display stars using data from the SAO catalog.
 - **Zoom and Pan**: Explore the star map by zooming in and out and dragging to move around.
 - **Search by Click**: Click anywhere on the star map to find and highlight the nearest star.
