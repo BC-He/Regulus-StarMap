@@ -27,35 +27,11 @@ function useStarMap(svgRef) {
   }, []);
 
   const findNearestStar = useCallback((ra, dec) => {
-    // Binary search to find the closest RA
-    let left = 0;
-    let right = starData.length - 1;
-    while (left <= right) {
-      const mid = Math.floor((left + right) / 2);
-      const midRA =
-        starData[mid].right_ascension.hours +
-        starData[mid].right_ascension.minutes / 60 +
-        parseFloat(starData[mid].right_ascension.seconds) / 3600;
-
-      if (midRA < ra) {
-        left = mid + 1;
-      } else if (midRA > ra) {
-        right = mid - 1;
-      } else {
-        left = mid;
-        break;
-      }
-    }
-
-    // Linear search in a small range around the found index
-    const searchRange = 1000; // Adjust this value based on your data distribution
-    const start = Math.max(0, left - searchRange);
-    const end = Math.min(starData.length - 1, left + searchRange);
-
     let nearestDistance = Infinity;
     let nearest = null;
-
-    for (let i = start; i <= end; i++) {
+  
+    // Perform a linear search through all star data
+    for (let i = 0; i < starData.length; i++) {
       const star = starData[i];
       const starRA =
         star.right_ascension.hours +
@@ -65,19 +41,22 @@ function useStarMap(svgRef) {
         star.declination.degrees +
         star.declination.minutes / 60 +
         parseFloat(star.declination.seconds) / 3600;
-
+  
+      // Calculate the distance
       const distance = Math.sqrt(
         Math.pow(ra - starRA, 2) + Math.pow(dec - starDec, 2)
       );
-
+  
+      // Update nearest star if this star is closer
       if (distance < nearestDistance) {
         nearestDistance = distance;
         nearest = star;
       }
     }
-
+  
     return nearest;
   }, []);
+  
 
   const handleClick = useCallback(
     (event, xScale, yScale, innerWidth, innerHeight, margin, transform) => {
@@ -171,7 +150,26 @@ function useStarMap(svgRef) {
       )
       .attr("r", (d) => Math.max(1, 6 - d.magnitude) * 0.2)
       .attr("fill", "white");
+      // Highlight the nearest star
+    if (nearestStar) {
+      const nearestStarRA =
+        nearestStar.right_ascension.hours +
+        nearestStar.right_ascension.minutes / 60 +
+        parseFloat(nearestStar.right_ascension.seconds) / 3600;
+      const nearestStarDec =
+        nearestStar.declination.degrees +
+        nearestStar.declination.minutes / 60 +
+        parseFloat(nearestStar.declination.seconds) / 3600;
 
+      // Draw a circle around the nearest star
+      g.append("circle")
+        .attr("cx", xScale(nearestStarRA))
+        .attr("cy", yScale(nearestStarDec))
+        .attr("r", 5) // Adjust the radius as needed
+        .attr("stroke", "orange")
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
+    }
     // Add labels
     svg.append("text")
       .attr("class", "axis-label x-axis-label")
